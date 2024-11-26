@@ -53,10 +53,10 @@ function deleteLoginAttempts(username) {
     }
 }
 
-const commentLimiter = rateLimit({
+const requestLimiter = rateLimit({
     windowMs: 5 * 1000, 
     max: 1, 
-    message: 'Trop de requêtes, veuillez réessayer après 10 secondes.'
+    message: 'Trop de requêtes, veuillez réessayer dans quelques secondes.'
 });
 
-module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, commentLimiter };
+module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, requestLimiter };
