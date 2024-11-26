@@ -11,7 +11,16 @@ function containsBannedWord(inputString) {
 }
 
 function containsSpace(inputString) {
-    return inputString.trim() != inputString || inputString.trim() != "";
+    return inputString.trim() != inputString || inputString.trim() == "";
 }
 
-module.exports = { containsBannedWord, containsSpace };
+function espaceSensibleCharacters(inputString) {
+    return inputString
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+module.exports = { containsBannedWord, containsSpace, espaceSensibleCharacters };
