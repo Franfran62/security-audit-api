@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const { containsBannedWord, containsSpace } = require('../security/inputSecurity');
 
 // Route pour afficher les commentaires et le formulaire
 router.get('/comments', (req, res) => {
@@ -17,12 +18,17 @@ router.get('/comments', (req, res) => {
     });
 });
 
-// Route pour ajouter un commentaire (vulnérable aux XSS)
+// Route pour ajouter un commentaire (vulnérable aux XSS) : plus maintenant eheh
 router.post('/comments', (req, res) => {
     const { text } = req.body;
-    const query = `INSERT INTO comments (text) VALUES ('${text}')`;
-    db.query(query, (err) => {
-        if (err) throw err;
+    if (containsBannedWord(text)) {
+        return res.status(400).send('Le commentaire n\'est pas correct.');
+    }
+    const query = 'INSERT INTO comments (text) VALUES (?)';
+    db.query(query, [text], (err) => {
+        if (err) {
+            return res.status(500).send('Une erreur est survenue lors de l\'ajout du commentaire. Veuillez réessayer plus tard.');
+        }
         res.redirect('/comments');
     });
 });

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const { containsBannedWord, containsSpace } = require('../security/inputSecurity');
 
 // Route pour afficher le formulaire d'inscription
 router.get('/register', (req, res) => {
@@ -13,13 +14,19 @@ router.get('/register', (req, res) => {
     `);
 });
 
-// Route pour gérer l'inscription (vulnérable à l'injection SQL)
+// Route pour gérer l'inscription (vulnérable à l'injection SQL) : nope hihi
 router.post('/register', (req, res) => {
     const { username, password } = req.body;
-    const query = `INSERT INTO users (username, password) VALUES ('${username}', '${password}')`;
-    db.query(query, (err) => {
-        if (err) throw err;
-        res.send('Registration successful! Go to <a href="/login">Login</a>');
+    if (containsBannedWord(username) || containsBannedWord(password) || containsSpace(username) || containsSpace(password)) {
+        return res.status(400).send('Le nom d\'utilisateur ou le mot de passe n\'est pas correct.');
+    }
+
+    const query = 'INSERT INTO users (username, password) VALUES (?, ?)';
+    db.query(query, [username, password], (err) => {
+        if (err) {
+            return res.status(500).send('Une erreur est survenue lors de l\'inscription. Veuillez réessayer plus tard.');
+        }
+        res.send('Inscription réussie ! Allez à <a href="/login">Connexion</a>');
     });
 });
 
