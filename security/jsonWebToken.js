@@ -9,7 +9,7 @@ function generateCsrfToken() {
 
 function verifyToken(req, res, next) {
     const token = req.cookies.token;
-    const csrfToken = req.headers['x-csrf-token'];
+    const csrfToken = req.cookies.csrfToken;
     if (!token || !csrfToken) {
         return res.status(403).send('Accès interdit');
     }
@@ -19,6 +19,7 @@ function verifyToken(req, res, next) {
             throw new Error('Invalid CSRF token');
         }
         req.user = decoded;
+        req.user.role = decoded.role; 
         next();
     } catch (err) {
         return res.status(401).send('Accès interdit');
@@ -45,4 +46,10 @@ function limitLoginAttempts(req, res, next) {
     next();
 }
 
-module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts };
+function deleteLoginAttempts(username) {
+    if (loginAttempts.hasOwnProperty(username)) {
+        delete loginAttempts[username]; 
+    }
+}
+
+module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts };
