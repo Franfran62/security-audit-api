@@ -4,7 +4,8 @@ const db = require('../config/database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { containsBannedWord, containsSpace, espaceSensibleCharacters } = require('../security/inputSecurity');
+const { containsBannedWord, containsSpace } = require('../security/inputSecurity');
+const { generateCsrfToken } = require('../security/jsonWebToken');
 
 // Home route
 router.get('/', (req, res) => {
@@ -31,8 +32,11 @@ router.post('/login', (req, res) => {
                 }
                 else if (isMatch) {
                     const token = jwt.sign({ id: results[0].id, username: results[0].username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                    const csrfToken = generateCsrfToken();
+                    req.session.csrfToken = csrfToken;
                     res.cookie('token', token, { httpOnly: true, secure: false, sameSite: "strict" });
-                    return res.send('Login successful!' );
+                    res.cookie('csrfToken', csrfToken, { httpOnly: false, secure: false, sameSite: "strict" });
+                    return res.send('Login successful!');
                 } else {
                     return res.send('Invalid credentials!'); 
                 }

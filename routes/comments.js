@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { containsBannedWord } = require('../security/inputSecurity');
-const verifyToken = require('../security/jsonWebToken');
+const { verifyToken } = require('../security/jsonWebToken'); 
 
 // Route pour afficher les commentaires et le formulaire
 router.get('/comments', verifyToken, (req, res) => {
     db.query('SELECT * FROM comments', (err, results) => {
-        if (err) throw err;
+        if (err) {
+            return res.status(500).send('Une erreur est survenue lors de la récupération des commentaires. Veuillez réessayer plus tard.');
+        }
         const commentsHTML = results.map(comment => `<p>${comment.text}</p>`).join('');
         res.send(`
             <form method="post" action="/comments">

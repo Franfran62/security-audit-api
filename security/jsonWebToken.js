@@ -1,12 +1,21 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+function generateCsrfToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
 
 function verifyToken(req, res, next) {
     const token = req.cookies.token;
-    if (!token) {
+    const csrfToken = req.headers['x-csrf-token'];
+    if (!token || !csrfToken) {
         return res.status(403).send('Accès interdit');
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (csrfToken !== req.session.csrfToken) {
+            throw new Error('Invalid CSRF token');
+        }
         req.user = decoded;
         next();
     } catch (err) {
@@ -14,4 +23,4 @@ function verifyToken(req, res, next) {
     }
 }
 
-module.exports = verifyToken;
+module.exports = { verifyToken, generateCsrfToken };

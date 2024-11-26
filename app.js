@@ -39,6 +39,9 @@ db.connect(err => {
 app.use('/', require('./routes/index'));
 app.use('/', require('./routes/auth')); // Ajout des routes d'authentification
 app.use('/', require('./routes/comments')); // Ajout des routes des commentaires
+app.use((req, res, next) => {
+    res.status(404).send('<h1>404 - Page non trouvée</h1>');
+});
 
 // Start server
 app.listen(port, () => {
