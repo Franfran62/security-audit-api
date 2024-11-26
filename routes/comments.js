@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { containsBannedWord } = require('../security/inputSecurity');
-const { verifyToken } = require('../security/jsonWebToken'); 
+const { verifyToken, commentLimiter } = require('../security/security.js');
 const { isAdmin } = require('../security/allowed.js');
 
 // Route pour afficher les commentaires et le formulaire
@@ -26,7 +26,7 @@ router.get('/comments', verifyToken, (req, res) => {
 });
 
 // Route pour ajouter un commentaire (vulnérable aux XSS) : plus maintenant eheh
-router.post('/comments', verifyToken, isAdmin, (req, res) => { 
+router.post('/comments', verifyToken, isAdmin, commentLimiter, (req, res) => {
     const { text } = req.body;
     if (containsBannedWord(text)) {
         return res.status(400).send('Le commentaire n\'est pas correct.');

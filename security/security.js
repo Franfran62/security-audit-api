@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
 const loginAttempts = {};
 
@@ -52,4 +53,10 @@ function deleteLoginAttempts(username) {
     }
 }
 
-module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts };
+const commentLimiter = rateLimit({
+    windowMs: 5 * 1000, 
+    max: 1, 
+    message: 'Trop de requêtes, veuillez réessayer après 10 secondes.'
+});
+
+module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, commentLimiter };

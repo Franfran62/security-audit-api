@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
 const { containsBannedWord, containsSpace, isPasswordComplex } = require('../security/inputSecurity');
-const { limitLoginAttempts } = require('../security/jsonWebToken');
+const { limitLoginAttempts } = require('../security/security');
 
 // Route pour afficher le formulaire d'inscription
 router.get('/register', (req, res) => {
@@ -25,7 +25,7 @@ router.post('/register', limitLoginAttempts, (req, res) => {
     if (!isPasswordComplex(password)) {
         return res.status(400).send('Le mot de passe doit contenir au moins 8 caractères, une minuscule et une majuscule.');
     }
-    
+
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) {
             return res.status(500).send('Une erreur est survenue lors de l\'inscription. Veuillez réessayer plus tard.');

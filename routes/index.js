@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { containsBannedWord, containsSpace } = require('../security/inputSecurity');
-const { generateCsrfToken, limitLoginAttempts, deleteLoginAttempts } = require('../security/jsonWebToken');
+const { generateCsrfToken, limitLoginAttempts, deleteLoginAttempts } = require('../security/security');
 
 // Home route
 router.get('/', (req, res) => {
@@ -28,13 +28,14 @@ router.post('/login', limitLoginAttempts, (req, res) => {
         if (results.length > 0) {
             bcrypt.compare(password, results[0].password, (err, isMatch) => {
                 if (err) {
-                    return res.status(400).send('Le nom d\'utilisateur ou le mot de passe n\'est pas correct.'); 
+                    return res.status(400).send('Le nom d\'utilisateur ou le mot de passe n\'est pas correct.');
                 }
                 else if (isMatch) {
-                    const token = jwt.sign({ id: results[0].id, 
-                                             username: results[0].username,
-                                             role: results[0].role // Ajoutez cette ligne pour inclure le rôle de l'utili
-                                             }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                    const token = jwt.sign({
+                        id: results[0].id,
+                        username: results[0].username,
+                        role: results[0].role // Ajoutez cette ligne pour inclure le rôle de l'utili
+                    }, process.env.JWT_SECRET, { expiresIn: '1h' });
                     const csrfToken = generateCsrfToken();
                     req.session.csrfToken = csrfToken;
                     res.cookie('token', token, { httpOnly: true, secure: false, sameSite: "strict" });
@@ -42,10 +43,10 @@ router.post('/login', limitLoginAttempts, (req, res) => {
                     deleteLoginAttempts(username);
                     return res.send('<p>Login successful!</p><a href="/comments">Go to comments</a>');
                 } else {
-                    return res.send('Invalid credentials!'); 
+                    return res.send('Invalid credentials!');
                 }
             });
-        } 
+        }
     });
 });
 
