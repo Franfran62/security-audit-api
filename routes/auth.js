@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
 const { containsBannedWord, containsSpace } = require('../security/inputSecurity');
+const { limitLoginAttempts } = require('../security/jsonWebToken');
 
 // Route pour afficher le formulaire d'inscription
 router.get('/register', (req, res) => {
@@ -16,7 +17,7 @@ router.get('/register', (req, res) => {
 });
 
 // Route pour gérer l'inscription (vulnérable à l'injection SQL) : nope hihi
-router.post('/register', (req, res) => {
+router.post('/register', limitLoginAttempts, (req, res) => {
     const { username, password } = req.body;
     if (containsBannedWord(username) || containsBannedWord(password) || containsSpace(username) || containsSpace(password)) {
         return res.status(400).send('Le nom d\'utilisateur ou le mot de passe n\'est pas correct.');

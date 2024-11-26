@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
+const loginAttempts = {};
+
 function generateCsrfToken() {
     return crypto.randomBytes(32).toString('hex');
 }
@@ -23,4 +25,24 @@ function verifyToken(req, res, next) {
     }
 }
 
-module.exports = { verifyToken, generateCsrfToken };
+function limitLoginAttempts(req, res, next) {
+    const { username } = req.body;
+    const currentTime = Date.now();
+    if (!loginAttempts[username]) {
+        loginAttempts[username] = { attempts: 1, lastAttempt: currentTime };
+    } else {
+        const { attempts, lastAttempt } = loginAttempts[username];
+        if (currentTime - lastAttempt < 5 * 60 * 1000) { 
+            if (attempts >= 5) {
+                return res.status(429).send('Trop de tentatives de connexion. Veuillez réessayer plus tard.');
+            }
+            loginAttempts[username].attempts += 1;
+        } else {
+            loginAttempts[username] = { attempts: 1, lastAttempt: currentTime };
+        }
+    }
+    loginAttempts[username].lastAttempt = currentTime;
+    next();
+}
+
+module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts };
