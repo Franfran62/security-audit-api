@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
-const { containsBannedWord, containsSpace } = require('../security/inputSecurity');
+const { containsBannedWord, containsSpace, isPasswordComplex } = require('../security/inputSecurity');
 const { limitLoginAttempts } = require('../security/jsonWebToken');
 
 // Route pour afficher le formulaire d'inscription
@@ -21,6 +21,9 @@ router.post('/register', limitLoginAttempts, (req, res) => {
     const { username, password } = req.body;
     if (containsBannedWord(username) || containsBannedWord(password) || containsSpace(username) || containsSpace(password)) {
         return res.status(400).send('Le nom d\'utilisateur ou le mot de passe n\'est pas correct.');
+    }
+    if (!isPasswordComplex(password)) {
+        return res.status(400).send('Le mot de passe doit contenir au moins 8 caractères, une minuscule et une majuscule.');
     }
     
     bcrypt.hash(password, 10, (err, hash) => {
