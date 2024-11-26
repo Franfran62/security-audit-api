@@ -17,7 +17,7 @@ router.get('/login', (req, res) => {
     res.send('<form method="post" action="/login"><input name="username" placeholder="Username"/><input type="password" name="password" placeholder="Password"/><button type="submit">Login</button></form>');
 });
 
-router.post('/login', limitLoginAttempts, requestLimiter (req, res) => {
+router.post('/login', limitLoginAttempts, requestLimiter, (req, res) => {
     const { username, password } = req.body;
     if (containsBannedWord(username) || containsBannedWord(password) || containsSpace(username) || containsSpace(password)) {
         return res.status(400).send('Le nom d\'utilisateur ou le mot de passe n\'est pas correct.');
