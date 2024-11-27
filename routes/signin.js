@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const { isCorrectPassword, isCorrectEmail } = require('../security/inputSecurity');
-const { limitLoginAttempts, requestLimiter } = require('../security/security');
+const { limitLoginAttempts, requestLimiter, isBlacklisted } = require('../security/security');
 const { isAuthenticated } = require('../security/allowed');
-const { signin, isBlacklisted } = require('../service/authService');
+const { signin } = require('../service/authService');
 router.use(bodyParser.json());
 
 // Route pour la connexion d'un utilisateur

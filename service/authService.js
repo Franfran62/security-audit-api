@@ -1,10 +1,9 @@
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { generateCsrfToken, deleteLoginAttempts, csrfTokens } = require('../security/security');
+const { generateCsrfToken, deleteLoginAttempts, csrfTokens, addToBlacklist } = require('../security/security');
 require('dotenv').config();
 
-const blacklist = new Set();
 
 function signin(email, password) {
     return new Promise((resolve, reject) => {
@@ -53,7 +52,7 @@ function logout(token) {
     return new Promise((resolve, reject) => {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            blacklist.add(token);
+            addToBlacklist(token);  
             resolve();
         } catch (err) {
             reject(new Error('Token invalide.'));
@@ -61,8 +60,4 @@ function logout(token) {
     });
 }
 
-function isBlacklisted(token) {
-    return blacklist.has(token);
-}
-
-module.exports = { signin, signup, logout, isBlacklisted };
+module.exports = { signin, signup, logout };

@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 require('dotenv').config();
 const http = require('http');
-const { wss } = require('./utils/websocket');
+const { isBlacklisted } = require('./service/authService');
 
 const app = express();
 const port = 3000;
@@ -44,10 +44,11 @@ const server = http.createServer(app);
 // Configurer le serveur pour gérer les connexions WebSocket
 server.on('upgrade', (request, socket, head) => {
     const token = request.headers['auth-token'];
-    if (!token) {
+    if (!token || isBlacklisted(token)) {
         socket.destroy();
         return;
     }
+    const { wss } = require('./utils/websocket');
     wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
     });

@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
-const { isBlacklisted } = require('../service/authService');
 
 const loginAttempts = {};
 const csrfTokens = {}; 
+const blacklist = new Set();
 
 function generateCsrfToken() {
     return crypto.randomBytes(32).toString('hex');
@@ -15,7 +15,7 @@ function verifyToken(req, res, next) {
         const token = req.headers['auth-token'];
         const csrfToken = req.headers['csrf-token'];
         
-        if (!token || !csrfToken || isBlacklisted(token)) {
+        if (!token || !csrfToken || blacklist.has(token)) {
             return res.status(403).send('Accès interdit');
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -58,10 +58,19 @@ function deleteLoginAttempts(username) {
     }
 }
 
+function addToBlacklist(token) {
+    blacklist.add(token);
+}
+
+function isBlacklisted(token) {
+    return blacklist.has(token);
+}
+
 const requestLimiter = rateLimit({
     windowMs: 5 * 1000, 
     max: 1, 
     message: 'Trop de requêtes, veuillez réessayer dans quelques secondes.'
 });
 
-module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, requestLimiter, csrfTokens };
+
+module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, requestLimiter, csrfTokens, addToBlacklist, isBlacklisted };
