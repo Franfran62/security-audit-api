@@ -1,23 +1,15 @@
-require('express')();
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
-const session = require('express-session');
 const mysql = require('mysql2');
-const cookieParser = require('cookie-parser');
 require('dotenv').config();
+const http = require('http');
+const { wss } = require('./utils/websocket');
 
 const app = express();
 const port = 3000;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(session({
-    secret: 'vulnerableSecret',
-    resave: false,
-    saveUninitialized: true
-}));
 
 // Database connection
 const db = mysql.createConnection({
@@ -36,14 +28,31 @@ db.connect(err => {
 });
 
 // Routes
-app.use('/', require('./routes/index'));
-app.use('/', require('./routes/auth')); // Ajout des routes d'authentification
-app.use('/', require('./routes/comments')); // Ajout des routes des commentaires
+app.use('/', require('./routes/signin'));
+app.use('/', require('./routes/signup'));
+app.use('/', require('./routes/logout'));
+app.use('/', require('./routes/reservation'));
+app.use('/', require('./routes/hebergement'));
+app.use('/', require('./routes/promotion'));
 app.use((req, res, next) => {
-    res.status(404).send('<h1>404 - Page non trouvée</h1>');
+    res.status(404).json({ error: '404 - Page not found' });
 });
 
 // Start server
-app.listen(port, () => {
+const server = http.createServer(app);
+
+// Configurer le serveur pour gérer les connexions WebSocket
+server.on('upgrade', (request, socket, head) => {
+    const token = request.headers['auth-token'];
+    if (!token) {
+        socket.destroy();
+        return;
+    }
+    wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+    });
+});
+
+server.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });

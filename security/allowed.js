@@ -1,3 +1,15 @@
+function isAuthenticated(req, res, next) {
+    const token = req.headers['auth-token'];
+    if (token) {
+        try {
+            jwt.verify(token, process.env.JWT_SECRET);
+            return res.redirect('/'); 
+        } catch (err) {
+        }
+    }
+    next();
+}
+
 function isAdmin(req, res, next) {
     if (req.user && req.user.role === 'admin') {
         next();
@@ -6,4 +18,4 @@ function isAdmin(req, res, next) {
     }
 }
 
-module.exports = { isAdmin };
+module.exports = { isAdmin, isAuthenticated };

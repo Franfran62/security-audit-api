@@ -1,7 +1,7 @@
 
-# Vulnerable Node.js App
+# Audit Security API Node.js App
 
-This is a deliberately vulnerable Node.js application for learning purposes.
+This is a Node.js application API for learning purposes.
 
 ## Setup Instructions
 
@@ -14,7 +14,7 @@ This is a deliberately vulnerable Node.js application for learning purposes.
 
 3. Import the database schema:
    ```bash
-   mysql -u root -p securite_web < database.sql
+   mysql -u root -p camping_paradise < database.sql
    ```
 
 4. Run the application:

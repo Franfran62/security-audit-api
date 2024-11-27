@@ -1,28 +1,33 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const { isBlacklisted } = require('../service/authService');
 
 const loginAttempts = {};
+const csrfTokens = {}; 
 
 function generateCsrfToken() {
     return crypto.randomBytes(32).toString('hex');
 }
 
 function verifyToken(req, res, next) {
-    const token = req.cookies.token;
-    const csrfToken = req.cookies.csrfToken;
-    if (!token || !csrfToken) {
-        return res.status(403).send('Accès interdit');
-    }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (csrfToken !== req.session.csrfToken) {
-            throw new Error('Invalid CSRF token');
+        const token = req.headers['auth-token'];
+        const csrfToken = req.headers['csrf-token'];
+        
+        if (!token || !csrfToken || isBlacklisted(token)) {
+            return res.status(403).send('Accès interdit');
         }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (csrfTokens[decoded.email] !== csrfToken) {
+            return res.status(403).send('prout Accès interdit');
+        }
+
         req.user = decoded;
         req.user.role = decoded.role; 
         next();
     } catch (err) {
+        console.log(err);
         return res.status(401).send('Accès interdit');
     }
 }
@@ -59,4 +64,4 @@ const requestLimiter = rateLimit({
     message: 'Trop de requêtes, veuillez réessayer dans quelques secondes.'
 });
 
-module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, requestLimiter };
+module.exports = { verifyToken, generateCsrfToken, limitLoginAttempts, deleteLoginAttempts, requestLimiter, csrfTokens };
