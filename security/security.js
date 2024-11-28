@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
-const { getUserByEmail } = require('../service/authService');
 
 const loginAttempts = {};
 const csrfTokens = {}; 
@@ -30,6 +29,21 @@ function verifyToken(req, res, next) {
         console.log(err);
         return res.status(401).send('Accès interdit');
     }
+}
+
+
+function getUserByEmail(email) {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM users WHERE email = ?';
+        db.query(query, [email], (err, results) => {
+            if (err) return reject(err);
+            if (results.length > 0) {
+                resolve(results[0]);
+            } else {
+                reject(new Error('Utilisateur non trouvé.'));
+            }
+        });
+    });
 }
 
 function limitLoginAttempts(req, res, next) {
