@@ -44,7 +44,7 @@ CREATE TABLE reservation (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Insert des utilisateurs 
+-- Exemple d'insert des utilisateurs (peuvent servir poru des tests par exemple) 
 INSERT INTO users (lastname, firstname, email, password, role) VALUES
 ('admin', 'admin', 'admin@admin.com', '@Admin1234!', 'admin'),
 ('user', 'user', 'user@user.com', '@User1234!', 'user');

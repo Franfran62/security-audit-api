@@ -15,11 +15,19 @@ function signin(email, password) {
                     if (err || !isMatch) {
                         return reject(new Error('L\'adresse email ou le mot de passe n\'est pas correct.'));
                     }
-                    const token = jwt.sign({
-                        id: results[0].id,
-                        email: results[0].email,
-                        role: results[0].role
-                    }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                    bcrypt.hash(results[0].email, 10, (err, encryptedEmail) => {
+                        if (err) return reject(err);
+                        const token = jwt.sign({
+                            email: encryptedEmail,
+                            role: results[0].role
+                        }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+                        const csrfToken = generateCsrfToken();
+                        csrfTokens[email] = csrfToken;
+
+                        deleteLoginAttempts(email);
+                        resolve({ token, csrfToken });
+                    });
                     const csrfToken = generateCsrfToken();
                     csrfTokens[results[0].email] = csrfToken;
 
@@ -60,4 +68,18 @@ function logout(token) {
     });
 }
 
-module.exports = { signin, signup, logout };
+function getUserByEmail(email) {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM users WHERE email = ?';
+        db.query(query, [email], (err, results) => {
+            if (err) return reject(err);
+            if (results.length > 0) {
+                resolve(results[0]);
+            } else {
+                reject(new Error('Utilisateur non trouvé.'));
+            }
+        });
+    });
+}
+
+module.exports = { signin, signup, logout, getUserByEmail };

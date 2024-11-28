@@ -79,7 +79,7 @@ function isCorrectReservation(data, isUpdate = false) {
 }
 
 function isCorrectHebergement(data, isUpdate = false) {
-    const validKeys = ['nom', 'description', 'adresse', 'prix', 'capacite'];
+    const validKeys = ['numero', 'capacite', 'type', 'prix_basse_saison', 'prix_haute_saison'];
 
     if (isUpdate) {
         validKeys.push('id');

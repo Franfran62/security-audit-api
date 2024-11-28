@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const { getUserByEmail } = require('../service/authService');
 
 const loginAttempts = {};
 const csrfTokens = {}; 
@@ -19,12 +20,11 @@ function verifyToken(req, res, next) {
             return res.status(403).send('Accès interdit');
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (csrfTokens[decoded.email] !== csrfToken) {
-            return res.status(403).send('prout Accès interdit');
+        user = getUserByEmail(decoded.email)
+        if (csrfTokens[user.email] !== csrfToken) {
+            return res.status(403).send('Accès interdit');
         }
-
-        req.user = decoded;
-        req.user.role = decoded.role; 
+        req.user = user;
         next();
     } catch (err) {
         console.log(err);
