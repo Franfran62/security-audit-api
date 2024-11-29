@@ -12,9 +12,9 @@ router.post('/logout', verifyToken, (req, res) => {
     logout(token)
         .then(() => {
             closeWebSocketConnection(token); 
-            res.status(200).send('Déconnexion réussie.');
+            res.status(200).json({ success: true, message: 'Déconnexion réussie.', data: null });
         })
-        .catch(err => res.status(400).send("Impossible de vous déconnecter. Réessayez plus tard ou contactez un administrateur réseau."));
+        .catch(err => res.status(500).json({ success: false, message: "Impossible de vous déconnecter. Réessayez plus tard ou contactez un administrateur réseau.", data: null }));
 });
 
 module.exports = router;

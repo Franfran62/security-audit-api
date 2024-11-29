@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const { generateCsrfToken, deleteLoginAttempts, csrfTokens, addToBlacklist } = require('../security/security');
 require('dotenv').config();
 
-
 function signin(email, password) {
     return new Promise((resolve, reject) => {
         const query = 'SELECT * FROM users WHERE email = ?';
@@ -15,19 +14,16 @@ function signin(email, password) {
                     if (err || !isMatch) {
                         return reject(new Error('L\'adresse email ou le mot de passe n\'est pas correct.'));
                     }
-                    bcrypt.hash(results[0].email, 10, (err, encryptedEmail) => {
-                        if (err) return reject(err);
-                        const token = jwt.sign({
-                            email: encryptedEmail,
-                            role: results[0].role
-                        }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                    const token = jwt.sign({
+                        email: email,
+                        role: results[0].role
+                    }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-                        const csrfToken = generateCsrfToken();
-                        csrfTokens[email] = csrfToken;
+                    const csrfToken = generateCsrfToken();
+                    csrfTokens[email] = csrfToken;
 
-                        deleteLoginAttempts(email);
-                        resolve({ token, csrfToken });
-                    });
+                    deleteLoginAttempts(email);
+                    resolve({ token, csrfToken, role: results[0].role });
                 });
             } else {
                 reject(new Error('L\'adresse email ou le mot de passe n\'est pas correct.'));
@@ -62,6 +58,5 @@ function logout(token) {
         }
     });
 }
-
 
 module.exports = { signin, signup, logout };

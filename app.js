@@ -4,12 +4,21 @@ const mysql = require('mysql2');
 require('dotenv').config();
 const http = require('http');
 const { isBlacklisted } = require('./service/authService');
+const cors = require('cors');
+const cookieParser = require('cookie-parser'); 
 
 const app = express();
 const port = 3000;
 
+const authorizationRoutes = require('./routes/authorization');
+
 // Middleware
+app.use(cors({ 
+    origin: 'http://localhost:5173',
+    credentials: true 
+}));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Database connection
 const db = mysql.createConnection({
@@ -34,6 +43,8 @@ app.use('/', require('./routes/logout'));
 app.use('/', require('./routes/reservation'));
 app.use('/', require('./routes/hebergement'));
 app.use('/', require('./routes/promotion'));
+app.use('/', require('./routes/authorization'));
+app.use('/api', authorizationRoutes);
 app.use((req, res, next) => {
     res.status(404).json({ error: '404 - Page not found' });
 });

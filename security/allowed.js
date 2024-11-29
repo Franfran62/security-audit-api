@@ -1,7 +1,7 @@
 function isAuthenticated(req, res, next) {
-    const token = req.headers['auth-token'];
-    if (token) {
+    if (req.user) {
         try {
+            const token = req.cookies['auth-token'] ?? false;
             jwt.verify(token, process.env.JWT_SECRET);
             return res.redirect('/'); 
         } catch (err) {

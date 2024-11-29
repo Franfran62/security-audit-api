@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const db = require('../config/database');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 
@@ -12,28 +13,34 @@ function generateCsrfToken() {
 
 function verifyToken(req, res, next) {
     try {
-        const token = req.headers['auth-token'];
-        const csrfToken = req.headers['csrf-token'];
+        const token = req.cookies['auth-token'] ?? null;
+        const csrfToken = req.cookies['csrf-token'] ?? null;
         
         if (!token || !csrfToken || blacklist.has(token)) {
             return res.status(403).send('Accès interdit');
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        user = getUserByEmail(decoded.email)
-        if (csrfTokens[user.email] !== csrfToken) {
-            return res.status(403).send('Accès interdit');
-        }
-        req.user = user;
-        next();
+        getUserByEmail(decoded.email)
+            .then(user => {
+                if (csrfTokens[user.email] !== csrfToken) {
+                    return res.status(403).send('Accès interdit');
+                }
+                req.user = user;
+                next();
+            })
+            .catch(err => {
+                console.log(err);
+                return res.status(401).send('Accès interdit');
+            });
     } catch (err) {
         console.log(err);
         return res.status(401).send('Accès interdit');
     }
 }
 
-
 function getUserByEmail(email) {
     return new Promise((resolve, reject) => {
+        console.log(email);
         const query = 'SELECT * FROM users WHERE email = ?';
         db.query(query, [email], (err, results) => {
             if (err) return reject(err);
@@ -53,9 +60,9 @@ function limitLoginAttempts(req, res, next) {
         loginAttempts[username] = { attempts: 1, lastAttempt: currentTime };
     } else {
         const { attempts, lastAttempt } = loginAttempts[username];
-        if (currentTime - lastAttempt < 5 * 60 * 1000) { 
+        if (currentTime - lastAttempt < 3 * 60 * 1000) { 
             if (attempts >= 5) {
-                return res.status(429).send('Trop de tentatives de connexion. Veuillez réessayer plus tard.');
+                return res.status(429).send({ success: false, message: 'Trop de tentatives, réessayez dans quelques minutes.', data: null });
             }
             loginAttempts[username].attempts += 1;
         } else {
@@ -83,6 +90,7 @@ function isBlacklisted(token) {
 const requestLimiter = rateLimit({
     windowMs: 5 * 1000, 
     max: 1, 
+    keyGenerator: (req) => req.user ? req.user.email : req.ip,
     message: 'Trop de requêtes, veuillez réessayer dans quelques secondes.'
 });
 
